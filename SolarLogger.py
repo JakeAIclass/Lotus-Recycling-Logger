@@ -18,7 +18,12 @@ st.subheader("Designed by Lotus Recycling")
 # -------------------------------
 # GOOGLE SHEETS CONNECTION
 # -------------------------------
-conn = st.connection("gsheets", type=GSheetsConnection)
+conn = st.connection(
+    "gsheets",
+    type=GSheetsConnection,
+    spreadsheet="120o8DAx7Xbi06sL3xVq5Lf-2JXtbdm4_nEvhVymEu_E"
+)
+
 
 # -------------------------------
 # LOAD OCR MODEL (cached)
