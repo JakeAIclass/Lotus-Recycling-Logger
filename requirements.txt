@@ -3,3 +3,4 @@ easyocr
 streamlit-gsheets
 pandas
 Pillow
+opencv-python-headless
