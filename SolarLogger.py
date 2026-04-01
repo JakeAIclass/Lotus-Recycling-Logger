@@ -8,7 +8,7 @@ import datetime
 import re
 
 # Connection to Google Sheets
-conn = st.connection("lotus_db", type=GSheetsConnection)
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 # OCR Setup
 @st.cache_resource
@@ -51,7 +51,7 @@ if img_file:
     if st.button("Save to Central Database"):
         try:
             # Read existing data
-            existing_data = conn.read(worksheet="Sheet1")
+            existing_data = conn.read()
             
             new_entry = pd.DataFrame([{
                 "Timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
