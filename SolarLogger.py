@@ -5,51 +5,58 @@ from PIL import Image
 import pandas as pd
 import datetime
 
-# Page Configuration for Mobile Compatibility
-st.set_page_config(page_title="Lotus Recycling", layout="centered")
+# 1. Page Config for Mobile
+st.set_page_config(page_title="Lotus-Sense Scanner", layout="centered")
 
-# Initialize OCR Engine (Cached to prevent reloading on every click)
+# 2. Setup the OCR Engine (Cached to save memory)
 @st.cache_resource
-def load_reader():
+def load_model():
     return easyocr.Reader(['en'])
 
-reader = load_reader()
+reader = load_model()
 
-# Branding Update
-st.title("♻️ Lotus Recycling Solar Panel Logger")
-st.write("Scan or upload a solar panel data sheet to log inventory details.")
+st.title("☀️ Lotus-Sense: Solar Scanner")
+st.info("Group Project: Automated Recycling Log [cite: 17, 18]")
 
-# Data Ingestion: Camera or File Upload for max compatibility
-input_method = st.radio("Choose Input Method:", ("Camera", "Upload Image"))
+# 3. Camera Input
+img_file = st.camera_input("Scan Solar Panel Label")
 
-img_file = None
-if input_method == "Camera":
-    img_file = st.camera_input("Scan Label")
-else:
-    img_file = st.file_uploader("Choose an image file", type=['jpg', 'jpeg', 'png'])
+# Initialize a session state to store data across the group members' sessions
+if 'group_data' not in st.session_state:
+    st.session_state.group_data = pd.DataFrame(columns=["Timestamp", "Manufacturer", "Raw_Text"])
 
 if img_file:
     input_image = Image.open(img_file)
     image_np = np.array(input_image)
     
-    with st.spinner("Analyzing Label..."):
-        # AI Model Integration
+    with st.spinner("AI is reading label..."):
         results = reader.readtext(image_np)
         detected_text = [res[1] for res in results]
         full_blob = " ".join(detected_text)
-        
-        st.subheader("Extracted Information")
-        st.info(full_blob if full_blob else "No text detected. Please try a clearer photo.")
+    
+    # Simple Logic to find a Brand (You can expand this!)
+    brand = "Unknown"
+    if "Trina" in full_blob: brand = "Trina Solar"
+    elif "Jinko" in full_blob: brand = "Jinko Solar"
 
-        # Automated Logging Logic
-        if full_blob:
-            log_entry = {
-                "Timestamp": [datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
-                "Extracted_Text": [full_blob],
-                "Device_Type": ["Mobile/Cloud"]
-            }
-            
-            df = pd.DataFrame(log_entry)
-            # This saves to the cloud instance's temporary storage
-            df.to_csv("solar_inventory.csv", mode='a', header=not st.io.path.exists("solar_inventory.csv"), index=False)
-            st.success("✅ Data logged successfully!")
+    # 4. Update the shared table
+    new_entry = {
+        "Timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "Manufacturer": brand,
+        "Raw_Text": full_blob[:100] + "..." # Truncate for display
+    }
+    
+    # Add to the list
+    st.session_state.group_data = pd.concat([st.session_state.group_data, pd.DataFrame([new_entry])], ignore_index=True)
+    
+    st.success(f"Successfully Scanned: {brand}")
+    st.table(st.session_state.group_data)
+
+    # 5. Export for the Group Report
+    csv = st.session_state.group_data.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        "Download Full Log (CSV)",
+        data=csv,
+        file_name="lotus_solar_log.csv",
+        mime="text/csv",
+    )
