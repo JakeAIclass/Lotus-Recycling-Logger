@@ -39,9 +39,11 @@ if img_file:
     # Extraction Logic
     wattage = re.findall(r'(\d{3})\s?W', full_blob, re.IGNORECASE)
     voltage = re.findall(r'(\d{2}\.?\d?)\s?V', full_blob, re.IGNORECASE)
+    model = re.findall(r'(TSM-\d+|JKM\d+|LR\d-\d+)', full_blob, re.IGNORECASE)
     
     extracted_pmax = wattage[0] if wattage else "N/A"
     extracted_voc = voltage[0] if voltage else "N/A"
+    extracted_model = model[0] if model else "N/A"
 
     st.markdown("### Extracted Data")
     st.write(f"**Pmax:** {extracted_pmax}W | **Voc:** {extracted_voc}V")
@@ -53,6 +55,7 @@ if img_file:
             
             new_entry = pd.DataFrame([{
                 "Timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Model": extracted_model,
                 "Wattage": extracted_pmax,
                 "Voltage": extracted_voc,
                 "Full_Text": full_blob
