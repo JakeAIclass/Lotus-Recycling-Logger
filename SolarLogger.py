@@ -7,52 +7,93 @@ import pandas as pd
 import datetime
 import re
 
-# Connection to Google Sheets
+# -------------------------------
+# PAGE CONFIG
+# -------------------------------
+st.set_page_config(page_title="Solar Panel Logger", layout="centered")
+
+st.title("☀️ Solar Panel Recycling Data System")
+st.subheader("Designed by Lotus Recycling")
+
+# -------------------------------
+# GOOGLE SHEETS CONNECTION
+# -------------------------------
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# OCR Setup
+# -------------------------------
+# LOAD OCR MODEL (cached)
+# -------------------------------
 @st.cache_resource
 def load_model():
     return easyocr.Reader(['en'])
 
 reader = load_model()
 
-st.title("Solar Panel Recycling Data System")
-st.subheader("Designed by Lotus Recycling")
+# -------------------------------
+# INPUT METHOD
+# -------------------------------
+input_method = st.radio(
+    "Select Input Method:",
+    ("📷 Scan with Camera", "📁 Upload Image File")
+)
 
-input_method = st.radio("Select Input Method:", ("Scan with Camera", "Upload Image File"))
-
-if input_method == "Scan with Camera":
-    img_file = st.camera_input("Take a photo of the data sheet")
+if input_method == "📷 Scan with Camera":
+    img_file = st.camera_input("Take a photo of the panel label")
 else:
-    img_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+    img_file = st.file_uploader("Upload an image...", type=["jpg", "jpeg", "png"])
 
+# -------------------------------
+# OCR PROCESSING
+# -------------------------------
 if img_file:
     input_image = Image.open(img_file)
     image_np = np.array(input_image)
+
     st.image(input_image, caption="Input Image", use_container_width=True)
-    
-    with st.spinner("AI is reading label..."):
+
+    with st.spinner("🔍 AI is reading label..."):
         results = reader.readtext(image_np)
         full_blob = " ".join([res[1] for res in results])
-    
-    # Extraction Logic
-    wattage = re.findall(r'(\d{3})\s?W', full_blob, re.IGNORECASE)
-    voltage = re.findall(r'(\d{2}\.?\d?)\s?V', full_blob, re.IGNORECASE)
-    model = re.findall(r'(TSM-\d+|JKM\d+|LR\d-\d+)', full_blob, re.IGNORECASE)
-    
+
+    # -------------------------------
+    # IMPROVED EXTRACTION LOGIC
+    # -------------------------------
+    wattage = re.findall(r'(\d{3,4})\s?[Ww]', full_blob)
+    voltage = re.findall(r'(\d{2,3}\.?\d*)\s?[Vv]', full_blob)
+
+    # Common solar model patterns
+    model = re.findall(r'(TSM-\w+|JKM\d+\w*|LR\d-\w+|[A-Z0-9\-]{6,})', full_blob)
+
     extracted_pmax = wattage[0] if wattage else "N/A"
     extracted_voc = voltage[0] if voltage else "N/A"
     extracted_model = model[0] if model else "N/A"
 
-    st.markdown("### Extracted Data")
-    st.write(f"**Pmax:** {extracted_pmax}W | **Voc:** {extracted_voc}V")
+    # -------------------------------
+    # DISPLAY RESULTS
+    # -------------------------------
+    st.markdown("### 📊 Extracted Data")
 
-    if st.button("Save to Central Database"):
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Model", extracted_model)
+    col2.metric("Wattage (Pmax)", f"{extracted_pmax} W")
+    col3.metric("Voltage (Voc)", f"{extracted_voc} V")
+
+    st.markdown("#### 🧾 Full OCR Text")
+    st.text_area("", full_blob, height=120)
+
+    # -------------------------------
+    # SAVE BUTTON
+    # -------------------------------
+    if st.button("💾 Save to Central Database"):
         try:
-            # Read existing data
-            existing_data = conn.read(worksheet="Sheet1")
-            
+            # SAFE READ (handles empty sheet)
+            try:
+                existing_data = conn.read(worksheet="Sheet1")
+            except:
+                existing_data = pd.DataFrame(columns=[
+                    "Timestamp", "Model", "Wattage", "Voltage", "Full_Text"
+                ])
+
             new_entry = pd.DataFrame([{
                 "Timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "Model": extracted_model,
@@ -62,17 +103,28 @@ if img_file:
             }])
 
             updated_df = pd.concat([existing_data, new_entry], ignore_index=True)
-            conn.update(worksheet="Sheet1", data=updated_df)
-            st.success("✅ Logged to Google Sheets!")
-        except Exception as e:
-            st.error(f"Error saving to database: {e}")
 
-# Shared Log View
-st.write("### Shared Global Log")
+            conn.update(worksheet="Sheet1", data=updated_df)
+
+            st.success("✅ Logged to Google Sheets!")
+
+        except Exception as e:
+            st.error(f"❌ Error saving to database: {e}")
+
+# -------------------------------
+# GLOBAL DATA VIEW
+# -------------------------------
+st.divider()
+st.markdown("### 🌍 Shared Global Log")
+
 try:
-    # This will now show us the EXACT error if it fails
     df = conn.read(worksheet="Sheet1")
-    st.dataframe(df)
+
+    if df.empty:
+        st.info("No data logged yet.")
+    else:
+        st.dataframe(df, use_container_width=True)
+
 except Exception as e:
-    st.error(f"Developer Debug Error: {e}")
-    st.warning("Database not connected yet. Please check Secrets.")
+    st.error(f"⚠️ Database connection error: {e}")
+    st.warning("Check your Streamlit secrets configuration.")
