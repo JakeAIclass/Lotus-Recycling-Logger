@@ -1,6 +1,6 @@
 streamlit
 easyocr
-streamlit-gsheets
+st-gsheets-connection
 pandas
 Pillow
 opencv-python-headless
