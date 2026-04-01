@@ -8,7 +8,7 @@ import datetime
 import re
 
 # Connection to Google Sheets
-conn = st.connection("solar_db", type=GSheetsConnection)
+conn = st.connection("lotus_db", type=GSheetsConnection)
 
 # OCR Setup
 @st.cache_resource
@@ -70,7 +70,9 @@ if img_file:
 # Shared Log View
 st.write("### Shared Global Log")
 try:
+    # This will now show us the EXACT error if it fails
     df = conn.read(worksheet="Sheet1")
     st.dataframe(df)
-except:
+except Exception as e:
+    st.error(f"Developer Debug Error: {e}")
     st.warning("Database not connected yet. Please check Secrets.")
