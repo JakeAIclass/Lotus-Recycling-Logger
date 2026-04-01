@@ -8,7 +8,7 @@ import datetime
 import re
 
 # Connection to Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
+conn = st.connection("solar_db", type=GSheetsConnection)
 
 # OCR Setup
 @st.cache_resource
