@@ -51,7 +51,7 @@ if img_file:
     if st.button("Save to Central Database"):
         try:
             # Read existing data
-            existing_data = conn.read()
+            existing_data = conn.read(worksheet="Sheet1")
             
             new_entry = pd.DataFrame([{
                 "Timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
