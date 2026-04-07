@@ -1,6 +1,5 @@
 import streamlit as st
-import gspread
-from google.oauth2.service_account import Credentials
+from st_gsheets_connection import GSheetsConnection
 from PIL import Image
 import pandas as pd
 import datetime
