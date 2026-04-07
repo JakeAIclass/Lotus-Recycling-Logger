@@ -1,6 +1,5 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
-from streamlit_js_eval import streamlit_js_eval
 from PIL import Image
 import pandas as pd
 import datetime
@@ -26,7 +25,6 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 # CLAUDE VISION OCR
 # -------------------------------
 def read_label_with_claude(image_file):
-    """Use Claude vision to extract text from solar panel label."""
     client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 
     image_bytes = image_file.getvalue()
@@ -70,8 +68,6 @@ if "longitude" not in st.session_state:
     st.session_state.longitude = ""
 if "location_name" not in st.session_state:
     st.session_state.location_name = ""
-if "geo_status" not in st.session_state:
-    st.session_state.geo_status = "idle"
 
 # -------------------------------
 # LOCATION SECTION
@@ -80,52 +76,60 @@ st.markdown("### 📍 Location")
 
 # --- AUTO GPS ---
 st.markdown("**Option 1: Automatic GPS**")
-col_gps1, col_gps2 = st.columns([1, 2])
+st.info("📱 On mobile this works best — press the button, allow location, then copy the coordinates shown into the box below.")
 
-with col_gps1:
-    if st.button("📍 Get GPS Location"):
-        st.session_state.geo_status = "waiting"
+st.components.v1.html("""
+    <div style="font-family: sans-serif;">
+        <button onclick="getLocation()" style="
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;">
+            📍 Get My GPS Coordinates
+        </button>
+        <p id="status" style="margin-top:10px; color: gray;">Click to get coordinates...</p>
+        <p id="coords" style="font-size: 18px; font-weight: bold; color: #1a1a1a;"></p>
+    </div>
 
-if st.session_state.geo_status == "waiting":
-    coords = streamlit_js_eval(
-        js_expressions="""
-            new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve(null);
-                } else {
-                    navigator.geolocation.getCurrentPosition(
-                        (pos) => resolve({
-                            lat: pos.coords.latitude,
-                            lon: pos.coords.longitude,
-                            acc: pos.coords.accuracy
-                        }),
-                        () => resolve(null),
-                        {enableHighAccuracy: true, timeout: 10000, maximumAge: 0}
-                    );
-                }
-            })
-        """,
-        key="gps_grab"
-    )
+    <script>
+    function getLocation() {
+        document.getElementById('status').innerText = '📡 Getting location...';
+        if (!navigator.geolocation) {
+            document.getElementById('status').innerText = '❌ Geolocation not supported.';
+            return;
+        }
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                const lat = pos.coords.latitude.toFixed(6);
+                const lon = pos.coords.longitude.toFixed(6);
+                document.getElementById('status').innerText = '✅ Location found! Copy coordinates below into the box:';
+                document.getElementById('coords').innerText = lat + ', ' + lon;
+            },
+            function(err) {
+                document.getElementById('status').innerText = '❌ Error: ' + err.message;
+            },
+            {enableHighAccuracy: true, timeout: 10000, maximumAge: 0}
+        );
+    }
+    </script>
+""", height=130)
 
-    if coords is not None:
-        if coords:
-            st.session_state.latitude   = str(round(coords["lat"], 6))
-            st.session_state.longitude  = str(round(coords["lon"], 6))
-            st.session_state.geo_status = "success"
-        else:
-            st.session_state.geo_status = "failed"
-        st.rerun()
+gps_input = st.text_input(
+    "📋 Paste GPS coordinates here (from button above)",
+    placeholder="-37.813600, 144.963100"
+)
 
-with col_gps2:
-    if st.session_state.geo_status == "success":
-        st.success(f"✅ GPS: {st.session_state.latitude}, {st.session_state.longitude}")
-    elif st.session_state.geo_status == "failed":
-        st.error("❌ GPS failed — use address search below.")
-    elif st.session_state.geo_status == "waiting":
-        st.info("📡 Requesting GPS... allow location in your browser.")
-    else:
-        st.info("Click button to get GPS coordinates.")
+if gps_input and ',' in gps_input:
+    try:
+        parts = gps_input.split(',')
+        st.session_state.latitude  = parts[0].strip()
+        st.session_state.longitude = parts[1].strip()
+        st.success(f"✅ GPS set: {st.session_state.latitude}, {st.session_state.longitude}")
+    except Exception:
+        st.error("❌ Could not parse coordinates — make sure format is: -37.8136, 144.9631")
 
 st.markdown("---")
 
@@ -162,7 +166,6 @@ if address_input and len(address_input) > 3:
             st.session_state.latitude      = str(round(lat, 6))
             st.session_state.longitude     = str(round(lon, 6))
             st.session_state.location_name = selected
-            st.session_state.geo_status    = "success"
             st.rerun()
     else:
         st.warning("No results found — try a different search term.")
@@ -176,7 +179,11 @@ with st.expander("✏️ Enter coordinates manually"):
         manual_lat = st.text_input("Latitude",  value=st.session_state.latitude,  placeholder="-37.8136")
     with col_m2:
         manual_lon = st.text_input("Longitude", value=st.session_state.longitude, placeholder="144.9631")
-    manual_site = st.text_input("Site Name", value=st.session_state.location_name, placeholder="e.g. Sunshine Depot")
+    manual_site = st.text_input(
+        "Site Name",
+        value=st.session_state.location_name,
+        placeholder="e.g. Sunshine Depot"
+    )
 
     if st.button("✅ Confirm Manual Entry"):
         if manual_lat and manual_lon:
@@ -194,12 +201,11 @@ longitude     = st.session_state.longitude     or "Unknown"
 location_name = st.session_state.location_name or ""
 
 if latitude != "Unknown":
-    st.success(f"📍 Location set: **{latitude}, {longitude}**  {('— ' + location_name) if location_name else ''}")
+    st.success(f"📍 Location set: **{latitude}, {longitude}** {('— ' + location_name) if location_name else ''}")
     if st.button("🔄 Reset Location"):
         st.session_state.latitude      = ""
         st.session_state.longitude     = ""
         st.session_state.location_name = ""
-        st.session_state.geo_status    = "idle"
         st.rerun()
 else:
     st.warning("⚠️ No location set yet — use GPS or address search above.")
@@ -297,7 +303,10 @@ if img_file:
             st.success("✅ Logged to Google Sheets!")
 
             if latitude != "Unknown":
-                st.map(pd.DataFrame({"lat": [float(latitude)], "lon": [float(longitude)]}))
+                st.map(pd.DataFrame({
+                    "lat": [float(latitude)],
+                    "lon": [float(longitude)]
+                }))
 
         except Exception as e:
             st.error(f"❌ Error saving to database: {e}")

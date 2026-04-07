@@ -1,6 +1,5 @@
 streamlit
 streamlit-gsheets
-streamlit-js-eval
 pillow
 pandas
 requests
