@@ -4,3 +4,4 @@ st-gsheets-connection
 pandas
 Pillow
 opencv-python-headless
+streamlit-js-eval
