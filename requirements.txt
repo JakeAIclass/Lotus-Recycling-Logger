@@ -1,8 +1,7 @@
 streamlit
 streamlit-gsheets
 streamlit-js-eval
-easyocr
-numpy<2.0
 pillow
 pandas
 requests
+anthropic

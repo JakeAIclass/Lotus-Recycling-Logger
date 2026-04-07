@@ -1,14 +1,13 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from streamlit_js_eval import streamlit_js_eval
-import easyocr
-import numpy as np
 from PIL import Image
 import pandas as pd
 import datetime
 import re
 import requests
-import time
+import anthropic
+import base64
 
 # -------------------------------
 # PAGE CONFIG
@@ -24,36 +23,43 @@ st.subheader("Designed by Lotus Recycling")
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # -------------------------------
-# LOAD OCR MODEL (cached)
+# CLAUDE VISION OCR
 # -------------------------------
-@st.cache_resource
-def load_model():
-    return easyocr.Reader(['en'])
+def read_label_with_claude(image_file):
+    """Use Claude vision to extract text from solar panel label."""
+    client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
 
-reader = load_model()
+    image_bytes = image_file.getvalue()
+    b64_image = base64.standard_b64encode(image_bytes).decode("utf-8")
 
-# -------------------------------
-# GEOCODING FUNCTION (Nominatim)
-# -------------------------------
-@st.cache_data(ttl=3600)
-def geocode_address(address):
-    """Convert address to lat/lon using OpenStreetMap Nominatim."""
-    try:
-        url = "https://nominatim.openstreetmap.org/search"
-        params = {
-            "q": address + ", Australia",
-            "format": "json",
-            "limit": 1,
-            "countrycodes": "au"
-        }
-        headers = {"User-Agent": "LotusRecyclingLogger/1.0"}
-        response = requests.get(url, params=params, headers=headers, timeout=5)
-        data = response.json()
-        if data:
-            return float(data[0]["lat"]), float(data[0]["lon"]), data[0]["display_name"]
-        return None, None, None
-    except Exception:
-        return None, None, None
+    suffix = getattr(image_file, 'name', 'image.jpg').split('.')[-1].lower()
+    media_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png"}
+    media_type = media_map.get(suffix, "image/jpeg")
+
+    response = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=1024,
+        messages=[{
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": media_type,
+                        "data": b64_image
+                    }
+                },
+                {
+                    "type": "text",
+                    "text": """You are reading a solar panel label. Extract ALL text you can see and return it as a single plain text blob.
+Include everything: model numbers, serial numbers, wattage, voltage, current, certifications, manufacturer info.
+Return only the raw extracted text, nothing else."""
+                }
+            ]
+        }]
+    )
+    return response.content[0].text
 
 # -------------------------------
 # SESSION STATE INIT
@@ -65,7 +71,7 @@ if "longitude" not in st.session_state:
 if "location_name" not in st.session_state:
     st.session_state.location_name = ""
 if "geo_status" not in st.session_state:
-    st.session_state.geo_status = "idle"  # idle | waiting | success | failed
+    st.session_state.geo_status = "idle"
 
 # -------------------------------
 # LOCATION SECTION
@@ -80,7 +86,6 @@ with col_gps1:
     if st.button("📍 Get GPS Location"):
         st.session_state.geo_status = "waiting"
 
-# Attempt GPS grab using JS eval
 if st.session_state.geo_status == "waiting":
     coords = streamlit_js_eval(
         js_expressions="""
@@ -105,8 +110,8 @@ if st.session_state.geo_status == "waiting":
 
     if coords is not None:
         if coords:
-            st.session_state.latitude  = str(round(coords["lat"], 6))
-            st.session_state.longitude = str(round(coords["lon"], 6))
+            st.session_state.latitude   = str(round(coords["lat"], 6))
+            st.session_state.longitude  = str(round(coords["lon"], 6))
             st.session_state.geo_status = "success"
         else:
             st.session_state.geo_status = "failed"
@@ -118,7 +123,7 @@ with col_gps2:
     elif st.session_state.geo_status == "failed":
         st.error("❌ GPS failed — use address search below.")
     elif st.session_state.geo_status == "waiting":
-        st.info("📡 Requesting GPS... (allow location in your browser)")
+        st.info("📡 Requesting GPS... allow location in your browser.")
     else:
         st.info("Click button to get GPS coordinates.")
 
@@ -129,12 +134,11 @@ st.markdown("**Option 2: Search by Address**")
 
 address_input = st.text_input(
     "🔍 Type an address or suburb",
-    placeholder="e.g. Sunshine, VIC or 123 Main St Melbourne"
+    placeholder="e.g. Sunshine VIC or 123 Main St Melbourne"
 )
 
 if address_input and len(address_input) > 3:
     with st.spinner("🔍 Looking up address..."):
-        # Search for multiple results
         try:
             url = "https://nominatim.openstreetmap.org/search"
             params = {
@@ -151,16 +155,14 @@ if address_input and len(address_input) > 3:
 
     if results:
         options = {r["display_name"]: (float(r["lat"]), float(r["lon"])) for r in results}
-        selected = st.selectbox(
-            "Select the correct address:",
-            options=list(options.keys())
-        )
+        selected = st.selectbox("Select the correct address:", list(options.keys()))
+
         if st.button("✅ Use This Address"):
             lat, lon = options[selected]
-            st.session_state.latitude     = str(round(lat, 6))
-            st.session_state.longitude    = str(round(lon, 6))
+            st.session_state.latitude      = str(round(lat, 6))
+            st.session_state.longitude     = str(round(lon, 6))
             st.session_state.location_name = selected
-            st.session_state.geo_status   = "success"
+            st.session_state.geo_status    = "success"
             st.rerun()
     else:
         st.warning("No results found — try a different search term.")
@@ -192,7 +194,7 @@ longitude     = st.session_state.longitude     or "Unknown"
 location_name = st.session_state.location_name or ""
 
 if latitude != "Unknown":
-    st.success(f"📍 Location set: **{latitude}, {longitude}** {('— ' + location_name) if location_name else ''}")
+    st.success(f"📍 Location set: **{latitude}, {longitude}**  {('— ' + location_name) if location_name else ''}")
     if st.button("🔄 Reset Location"):
         st.session_state.latitude      = ""
         st.session_state.longitude     = ""
@@ -221,14 +223,14 @@ else:
 # -------------------------------
 if img_file:
     input_image = Image.open(img_file)
-    image_np    = np.array(input_image)
-
     st.image(input_image, caption="Input Image", use_container_width=True)
 
-    with st.spinner("🔍 AI is reading label..."):
-        results   = reader.readtext(image_np)
-        full_blob = " ".join([res[1] for res in results])
+    with st.spinner("🔍 Claude is reading the label..."):
+        full_blob = read_label_with_claude(img_file)
 
+    # -------------------------------
+    # EXTRACTION LOGIC
+    # -------------------------------
     wattage = re.findall(r'(\d{3,4})\s?[Ww](?!h)', full_blob)
     voltage = re.findall(r'(\d{2,3}\.?\d*)\s?[Vv]', full_blob)
     model   = re.findall(r'(TSM-\w+|JKM\d+\w*|LR\d-\w+|CS\d+-\w+|JAM\d+\w*|[A-Z]{2,4}[-_]\d{2,4}[-_]\w+)', full_blob)
@@ -241,6 +243,9 @@ if img_file:
     extracted_model  = model[0]   if model   else "N/A"
     extracted_serial = serial[0]  if serial  else "N/A"
 
+    # -------------------------------
+    # DISPLAY RESULTS
+    # -------------------------------
     st.markdown("### 📊 Extracted Data")
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Model",          extracted_model)
@@ -262,11 +267,14 @@ if img_file:
     with c4:
         extracted_serial = st.text_input("Serial Number", value=extracted_serial)
 
+    # -------------------------------
+    # SAVE BUTTON
+    # -------------------------------
     if st.button("💾 Save to Central Database"):
         try:
             try:
                 existing_data = conn.read(worksheet="Sheet1")
-            except:
+            except Exception:
                 existing_data = pd.DataFrame(columns=[
                     "Timestamp", "Model", "Serial_Number", "Wattage",
                     "Voltage", "Latitude", "Longitude", "Site_Name", "Full_Text"
@@ -316,7 +324,8 @@ try:
                 map_df["lon"] = map_df["lon"].astype(float)
                 st.markdown("#### 🗺️ All Scan Locations")
                 st.map(map_df)
-            except:
+            except Exception:
                 pass
+
 except Exception as e:
     st.error(f"⚠️ Database connection error: {e}")
