@@ -1,7 +1,8 @@
 streamlit
-easyocr
-st-gsheets-connection
-pandas
-Pillow
-opencv-python-headless
+streamlit-gsheets
 streamlit-js-eval
+easyocr
+numpy<2.0
+pillow
+pandas
+requests
