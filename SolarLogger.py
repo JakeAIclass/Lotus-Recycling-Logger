@@ -1,12 +1,12 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from PIL import Image
+import numpy as np
 import pandas as pd
 import datetime
 import re
 import requests
-import anthropic
-import base64
+import easyocr
 
 # -------------------------------
 # PAGE CONFIG
@@ -22,42 +22,13 @@ st.subheader("Designed by Lotus Recycling")
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 # -------------------------------
-# CLAUDE VISION OCR
+# LOAD OCR MODEL (cached)
 # -------------------------------
-def read_label_with_claude(image_file):
-    client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+@st.cache_resource
+def load_model():
+    return easyocr.Reader(['en'])
 
-    image_bytes = image_file.getvalue()
-    b64_image = base64.standard_b64encode(image_bytes).decode("utf-8")
-
-    suffix = getattr(image_file, 'name', 'image.jpg').split('.')[-1].lower()
-    media_map = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png"}
-    media_type = media_map.get(suffix, "image/jpeg")
-
-    response = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=1024,
-        messages=[{
-            "role": "user",
-            "content": [
-                {
-                    "type": "image",
-                    "source": {
-                        "type": "base64",
-                        "media_type": media_type,
-                        "data": b64_image
-                    }
-                },
-                {
-                    "type": "text",
-                    "text": """You are reading a solar panel label. Extract ALL text you can see and return it as a single plain text blob.
-Include everything: model numbers, serial numbers, wattage, voltage, current, certifications, manufacturer info.
-Return only the raw extracted text, nothing else."""
-                }
-            ]
-        }]
-    )
-    return response.content[0].text
+reader = load_model()
 
 # -------------------------------
 # SESSION STATE INIT
@@ -229,10 +200,12 @@ else:
 # -------------------------------
 if img_file:
     input_image = Image.open(img_file)
+    image_np    = np.array(input_image)
     st.image(input_image, caption="Input Image", use_container_width=True)
 
-    with st.spinner("🔍 Claude is reading the label..."):
-        full_blob = read_label_with_claude(img_file)
+    with st.spinner("🔍 Reading label... this may take a moment."):
+        results   = reader.readtext(image_np)
+        full_blob = " ".join([res[1] for res in results])
 
     # -------------------------------
     # EXTRACTION LOGIC

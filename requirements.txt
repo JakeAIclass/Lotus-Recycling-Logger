@@ -3,4 +3,5 @@ st-gsheets-connection
 pillow
 pandas
 requests
-anthropic
+easyocr
+numpy<2.0
