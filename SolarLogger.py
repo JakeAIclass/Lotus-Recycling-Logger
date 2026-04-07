@@ -1,12 +1,14 @@
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
-from streamlit_js_eval import get_geolocation
+from streamlit_js_eval import streamlit_js_eval
 import easyocr
 import numpy as np
 from PIL import Image
 import pandas as pd
 import datetime
 import re
+import requests
+import time
 
 # -------------------------------
 # PAGE CONFIG
@@ -31,133 +33,174 @@ def load_model():
 reader = load_model()
 
 # -------------------------------
-# AUSTRALIAN LOCATIONS
+# GEOCODING FUNCTION (Nominatim)
 # -------------------------------
-AU_LOCATIONS = [
-    # NSW
-    "Sydney NSW", "Parramatta NSW", "Newcastle NSW", "Wollongong NSW",
-    "Central Coast NSW", "Maitland NSW", "Coffs Harbour NSW", "Wagga Wagga NSW",
-    "Albury NSW", "Port Macquarie NSW", "Tamworth NSW", "Orange NSW",
-    "Dubbo NSW", "Bathurst NSW", "Lismore NSW", "Broken Hill NSW",
-    # VIC
-    "Melbourne VIC", "Geelong VIC", "Ballarat VIC", "Bendigo VIC",
-    "Shepparton VIC", "Melton VIC", "Mildura VIC", "Wodonga VIC",
-    "Warrnambool VIC", "Traralgon VIC", "Sunbury VIC", "Wangaratta VIC",
-    "Frankston VIC", "Dandenong VIC", "Ringwood VIC", "Footscray VIC",
-    "Sunshine VIC", "Werribee VIC", "Hoppers Crossing VIC", "Cranbourne VIC",
-    # QLD
-    "Brisbane QLD", "Gold Coast QLD", "Sunshine Coast QLD", "Townsville QLD",
-    "Cairns QLD", "Toowoomba QLD", "Rockhampton QLD", "Mackay QLD",
-    "Bundaberg QLD", "Hervey Bay QLD", "Gladstone QLD", "Mount Isa QLD",
-    "Ipswich QLD", "Logan QLD", "Redcliffe QLD", "Caboolture QLD",
-    # SA
-    "Adelaide SA", "Mount Gambier SA", "Whyalla SA", "Murray Bridge SA",
-    "Port Augusta SA", "Port Pirie SA", "Victor Harbor SA", "Gawler SA",
-    # WA
-    "Perth WA", "Mandurah WA", "Bunbury WA", "Geraldton WA",
-    "Albany WA", "Kalgoorlie WA", "Broome WA", "Port Hedland WA",
-    "Karratha WA", "Rockingham WA", "Fremantle WA", "Joondalup WA",
-    # TAS
-    "Hobart TAS", "Launceston TAS", "Devonport TAS", "Burnie TAS",
-    # NT
-    "Darwin NT", "Alice Springs NT", "Palmerston NT", "Katherine NT",
-    # ACT
-    "Canberra ACT", "Belconnen ACT", "Tuggeranong ACT", "Gungahlin ACT",
-]
-AU_LOCATIONS.sort()
+@st.cache_data(ttl=3600)
+def geocode_address(address):
+    """Convert address to lat/lon using OpenStreetMap Nominatim."""
+    try:
+        url = "https://nominatim.openstreetmap.org/search"
+        params = {
+            "q": address + ", Australia",
+            "format": "json",
+            "limit": 1,
+            "countrycodes": "au"
+        }
+        headers = {"User-Agent": "LotusRecyclingLogger/1.0"}
+        response = requests.get(url, params=params, headers=headers, timeout=5)
+        data = response.json()
+        if data:
+            return float(data[0]["lat"]), float(data[0]["lon"]), data[0]["display_name"]
+        return None, None, None
+    except Exception:
+        return None, None, None
 
 # -------------------------------
-# GEOLOCATION
+# SESSION STATE INIT
 # -------------------------------
-st.markdown("### 📍 Location")
-
-# Session state init
 if "latitude" not in st.session_state:
     st.session_state.latitude = ""
 if "longitude" not in st.session_state:
     st.session_state.longitude = ""
-if "geo_tried" not in st.session_state:
-    st.session_state.geo_tried = False
+if "location_name" not in st.session_state:
+    st.session_state.location_name = ""
+if "geo_status" not in st.session_state:
+    st.session_state.geo_status = "idle"  # idle | waiting | success | failed
 
-col_geo1, col_geo2 = st.columns([1, 2])
+# -------------------------------
+# LOCATION SECTION
+# -------------------------------
+st.markdown("### 📍 Location")
 
-with col_geo1:
-    get_geo = st.button("📍 Get My GPS Location")
+# --- AUTO GPS ---
+st.markdown("**Option 1: Automatic GPS**")
+col_gps1, col_gps2 = st.columns([1, 2])
 
-with col_geo2:
-    if st.session_state.latitude and st.session_state.longitude:
-        st.success(f"✅ {st.session_state.latitude}, {st.session_state.longitude}")
-    elif st.session_state.geo_tried:
-        st.error("❌ GPS unavailable — please enter manually below.")
-    else:
-        st.info("Press button or enter manually below.")
+with col_gps1:
+    if st.button("📍 Get GPS Location"):
+        st.session_state.geo_status = "waiting"
 
-if get_geo:
-    st.session_state.geo_tried = True
-    with st.spinner("📡 Getting GPS location..."):
-        try:
-            loc = get_geolocation()
-            if loc and "coords" in loc:
-                st.session_state.latitude  = str(round(loc["coords"]["latitude"], 6))
-                st.session_state.longitude = str(round(loc["coords"]["longitude"], 6))
-                st.rerun()
-            else:
-                st.session_state.latitude  = ""
-                st.session_state.longitude = ""
-        except Exception:
-            st.session_state.latitude  = ""
-            st.session_state.longitude = ""
-
-# Manual entry
-with st.expander("✏️ Enter or override location manually", expanded=(not st.session_state.latitude)):
-    
-    # Australian location autocomplete
-    site_search = st.selectbox(
-        "🔍 Search Australian location",
-        options=[""] + AU_LOCATIONS,
-        index=0,
-        help="Start typing to filter locations"
+# Attempt GPS grab using JS eval
+if st.session_state.geo_status == "waiting":
+    coords = streamlit_js_eval(
+        js_expressions="""
+            new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve(null);
+                } else {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({
+                            lat: pos.coords.latitude,
+                            lon: pos.coords.longitude,
+                            acc: pos.coords.accuracy
+                        }),
+                        () => resolve(null),
+                        {enableHighAccuracy: true, timeout: 10000, maximumAge: 0}
+                    );
+                }
+            })
+        """,
+        key="gps_grab"
     )
 
+    if coords is not None:
+        if coords:
+            st.session_state.latitude  = str(round(coords["lat"], 6))
+            st.session_state.longitude = str(round(coords["lon"], 6))
+            st.session_state.geo_status = "success"
+        else:
+            st.session_state.geo_status = "failed"
+        st.rerun()
+
+with col_gps2:
+    if st.session_state.geo_status == "success":
+        st.success(f"✅ GPS: {st.session_state.latitude}, {st.session_state.longitude}")
+    elif st.session_state.geo_status == "failed":
+        st.error("❌ GPS failed — use address search below.")
+    elif st.session_state.geo_status == "waiting":
+        st.info("📡 Requesting GPS... (allow location in your browser)")
+    else:
+        st.info("Click button to get GPS coordinates.")
+
+st.markdown("---")
+
+# --- ADDRESS SEARCH ---
+st.markdown("**Option 2: Search by Address**")
+
+address_input = st.text_input(
+    "🔍 Type an address or suburb",
+    placeholder="e.g. Sunshine, VIC or 123 Main St Melbourne"
+)
+
+if address_input and len(address_input) > 3:
+    with st.spinner("🔍 Looking up address..."):
+        # Search for multiple results
+        try:
+            url = "https://nominatim.openstreetmap.org/search"
+            params = {
+                "q": address_input + ", Australia",
+                "format": "json",
+                "limit": 5,
+                "countrycodes": "au"
+            }
+            headers = {"User-Agent": "LotusRecyclingLogger/1.0"}
+            resp = requests.get(url, params=params, headers=headers, timeout=5)
+            results = resp.json()
+        except Exception:
+            results = []
+
+    if results:
+        options = {r["display_name"]: (float(r["lat"]), float(r["lon"])) for r in results}
+        selected = st.selectbox(
+            "Select the correct address:",
+            options=list(options.keys())
+        )
+        if st.button("✅ Use This Address"):
+            lat, lon = options[selected]
+            st.session_state.latitude     = str(round(lat, 6))
+            st.session_state.longitude    = str(round(lon, 6))
+            st.session_state.location_name = selected
+            st.session_state.geo_status   = "success"
+            st.rerun()
+    else:
+        st.warning("No results found — try a different search term.")
+
+st.markdown("---")
+
+# --- MANUAL OVERRIDE ---
+with st.expander("✏️ Enter coordinates manually"):
     col_m1, col_m2 = st.columns(2)
     with col_m1:
-        manual_lat = st.text_input(
-            "Latitude",
-            value=st.session_state.latitude,
-            placeholder="e.g. -37.8136"
-        )
+        manual_lat = st.text_input("Latitude",  value=st.session_state.latitude,  placeholder="-37.8136")
     with col_m2:
-        manual_lon = st.text_input(
-            "Longitude",
-            value=st.session_state.longitude,
-            placeholder="e.g. 144.9631"
-        )
+        manual_lon = st.text_input("Longitude", value=st.session_state.longitude, placeholder="144.9631")
+    manual_site = st.text_input("Site Name", value=st.session_state.location_name, placeholder="e.g. Sunshine Depot")
 
-    manual_site = st.text_input(
-        "Site Name / Address",
-        value=site_search,
-        placeholder="e.g. Sunshine Depot, Melbourne VIC"
-    )
-
-    if st.button("✅ Confirm Manual Location"):
+    if st.button("✅ Confirm Manual Entry"):
         if manual_lat and manual_lon:
-            st.session_state.latitude  = manual_lat
-            st.session_state.longitude = manual_lon
-            st.success(f"📍 Location set: {manual_lat}, {manual_lon}")
+            st.session_state.latitude      = manual_lat
+            st.session_state.longitude     = manual_lon
+            st.session_state.location_name = manual_site
+            st.success("📍 Manual location saved!")
             st.rerun()
         else:
             st.warning("Please enter both latitude and longitude.")
 
-# Resolve final values
-latitude      = st.session_state.latitude  or "Unknown"
-longitude     = st.session_state.longitude or "Unknown"
-location_name = manual_site if 'manual_site' in dir() and manual_site else (site_search or "")
+# --- CURRENT STATUS ---
+latitude      = st.session_state.latitude      or "Unknown"
+longitude     = st.session_state.longitude     or "Unknown"
+location_name = st.session_state.location_name or ""
 
-# Show current location status
 if latitude != "Unknown":
-    st.success(f"📍 Location ready: **{latitude}, {longitude}** {('— ' + location_name) if location_name else ''}")
+    st.success(f"📍 Location set: **{latitude}, {longitude}** {('— ' + location_name) if location_name else ''}")
+    if st.button("🔄 Reset Location"):
+        st.session_state.latitude      = ""
+        st.session_state.longitude     = ""
+        st.session_state.location_name = ""
+        st.session_state.geo_status    = "idle"
+        st.rerun()
 else:
-    st.warning("⚠️ No location set — you can still save but location will be logged as Unknown.")
+    st.warning("⚠️ No location set yet — use GPS or address search above.")
 
 # -------------------------------
 # INPUT METHOD
@@ -186,7 +229,6 @@ if img_file:
         results   = reader.readtext(image_np)
         full_blob = " ".join([res[1] for res in results])
 
-    # Extraction
     wattage = re.findall(r'(\d{3,4})\s?[Ww](?!h)', full_blob)
     voltage = re.findall(r'(\d{2,3}\.?\d*)\s?[Vv]', full_blob)
     model   = re.findall(r'(TSM-\w+|JKM\d+\w*|LR\d-\w+|CS\d+-\w+|JAM\d+\w*|[A-Z]{2,4}[-_]\d{2,4}[-_]\w+)', full_blob)
@@ -220,9 +262,6 @@ if img_file:
     with c4:
         extracted_serial = st.text_input("Serial Number", value=extracted_serial)
 
-    # -------------------------------
-    # SAVE BUTTON
-    # -------------------------------
     if st.button("💾 Save to Central Database"):
         try:
             try:
