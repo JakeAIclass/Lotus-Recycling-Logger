@@ -1,0 +1,43 @@
+stages:
+  preprocess:
+    cmd: python src/preprocess_new_data.py
+    deps:
+      - src/preprocess_new_data.py
+      - data/new_data.csv
+    outs:
+      - data/train.csv
+
+  monitor:
+    cmd: python src/monitor.py
+    deps:
+      - src/monitor.py
+      - data/train.csv
+      - data/test.csv
+      - data/new_data.csv
+    outs:
+      - monitoring/reports/train_drift_report.json
+      - monitoring/reports/test_drift_report.json
+      - monitoring/reports/new_data_drift_report.json
+      - monitoring/logs/monitoring.log
+
+  train:
+    cmd: python model.py
+    deps:
+      - model.py
+      - data/train.csv
+      - data/test.csv
+      - data/new_data.csv
+    outs:
+      - model_results.png
+      - metrics.txt
+      - artifacts/metrics/evaluation_metrics.json
+      - artifacts/metadata/model_version.txt
+      - artifacts/metadata/last_retrain.txt
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - data/test.csv
+    outs:
+      - artifacts/metrics/evaluation_metrics.json

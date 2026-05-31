@@ -1,0 +1,20 @@
+{
+  "label": "new_data",
+  "timestamp": "2026-05-31T16:04:01.510143",
+  "total_samples": 6,
+  "unknown_count": 4,
+  "unknown_rate": 0.6667,
+  "avg_confidence": 0.6667,
+  "delisted_detected": 0,
+  "brand_distribution": {
+    "Trina Solar": 1,
+    "JinkoSolar": 1,
+    "Unknown": 4
+  },
+  "drift_detected": true,
+  "low_confidence": true,
+  "alerts": [
+    "DATA DRIFT ALERT: Unknown brand rate 66.7% exceeds threshold 20.0%",
+    "LOW CONFIDENCE ALERT: Avg confidence 0.67 below threshold 0.70"
+  ]
+}

@@ -1,0 +1,82 @@
+
+==================================================
+Timestamp: 2026-05-31T15:56:37.906477
+Label: train
+Samples: 18
+Unknown Rate: 33.3%
+Avg Confidence: 0.83
+Drift Detected: True
+ALERTS:
+  - DATA DRIFT ALERT: Unknown brand rate 33.3% exceeds threshold 20.0%
+
+==================================================
+Timestamp: 2026-05-31T15:56:37.923634
+Label: test
+Samples: 12
+Unknown Rate: 25.0%
+Avg Confidence: 0.88
+Drift Detected: True
+ALERTS:
+  - DATA DRIFT ALERT: Unknown brand rate 25.0% exceeds threshold 20.0%
+
+==================================================
+Timestamp: 2026-05-31T15:56:37.938060
+Label: new_data
+Samples: 5
+Unknown Rate: 100.0%
+Avg Confidence: 0.50
+Drift Detected: True
+ALERTS:
+  - DATA DRIFT ALERT: Unknown brand rate 100.0% exceeds threshold 20.0%
+  - LOW CONFIDENCE ALERT: Avg confidence 0.50 below threshold 0.70
+
+==================================================
+Timestamp: 2026-05-31T16:02:02.449533
+Label: train
+Samples: 18
+Unknown Rate: 0.0%
+Avg Confidence: 1.00
+Drift Detected: False
+
+==================================================
+Timestamp: 2026-05-31T16:02:02.459792
+Label: test
+Samples: 12
+Unknown Rate: 0.0%
+Avg Confidence: 1.00
+Drift Detected: False
+
+==================================================
+Timestamp: 2026-05-31T16:02:02.468249
+Label: new_data
+Samples: 5
+Unknown Rate: 0.0%
+Avg Confidence: 1.00
+Drift Detected: False
+
+==================================================
+Timestamp: 2026-05-31T16:04:01.489574
+Label: train
+Samples: 18
+Unknown Rate: 0.0%
+Avg Confidence: 1.00
+Drift Detected: False
+
+==================================================
+Timestamp: 2026-05-31T16:04:01.502426
+Label: test
+Samples: 12
+Unknown Rate: 0.0%
+Avg Confidence: 1.00
+Drift Detected: False
+
+==================================================
+Timestamp: 2026-05-31T16:04:01.510143
+Label: new_data
+Samples: 6
+Unknown Rate: 66.7%
+Avg Confidence: 0.67
+Drift Detected: True
+ALERTS:
+  - DATA DRIFT ALERT: Unknown brand rate 66.7% exceeds threshold 20.0%
+  - LOW CONFIDENCE ALERT: Avg confidence 0.67 below threshold 0.70

@@ -1,0 +1,13 @@
+serial_no,brand,wattage,voltage_vmp,current_imp,voltage_voc,current_isc,confidence,scan_type,job_site,timestamp
+440NEG9R.25|Q2||00501234,Trina Solar,440,44.0,10.01,52.2,10.67,High,job,99 Test St Melbourne,2026-04-01 09:00:00
+Q.PEAK-DUO-G10-410BK,Hanwha Qcells,410,37.9,10.81,45.7,11.30,High,job,99 Test St Melbourne,2026-04-01 09:05:00
+CS6W-555MS-2024,Canadian Solar,555,41.6,13.34,49.8,14.00,High,job,99 Test St Melbourne,2026-04-01 09:10:00
+JAM54S30-415-MR,JA Solar,415,38.5,10.78,46.5,11.20,High,job,99 Test St Melbourne,2026-04-01 09:15:00
+LR5-54HPH-420M-F4,LONGi Solar,420,40.8,10.29,49.2,10.80,High,job,99 Test St Melbourne,2026-04-01 09:20:00
+RSM144-7-540M,Risen Energy,540,41.8,12.92,50.5,13.50,High,job,99 Test St Melbourne,2026-04-01 09:25:00
+480150224011150000087654,JinkoSolar,480,42.3,11.35,50.6,11.90,High,job,99 Test St Melbourne,2026-04-01 09:30:00
+7876543219,REC Group,400,35.1,11.40,41.5,11.90,Low,job,99 Test St Melbourne,2026-04-01 09:35:00
+TN144M-440W-2024,Tindo Solar,440,40.2,10.94,48.8,11.40,High,recycler,Lotus Recycling Campbellfield,2026-04-01 10:00:00
+STP380S-B60-MA,Suntech Power,380,36.2,10.50,44.1,10.90,High,recycler,Lotus Recycling Campbellfield,2026-04-01 10:05:00
+A09180605701597,Trina Solar,275,31.1,8.84,38.1,9.32,Medium,recycler,Lotus Recycling Campbellfield,2026-04-01 10:10:00
+9030182874101200456,Hanwha Qcells,325,33.65,9.66,40.40,10.14,Medium,recycler,Lotus Recycling Campbellfield,2026-04-01 10:15:00

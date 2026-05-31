@@ -1,0 +1,7 @@
+serial_no,brand,wattage,voltage_vmp,current_imp,voltage_voc,current_isc,confidence,scan_type,job_site,timestamp
+440NEG9R.25|Q3||00901234,Trina Solar,440,44.0,10.01,52.2,10.67,High,job,164 Barry Rd Campbellfield,2026-05-01 09:00:00
+500150225061180000033333,JinkoSolar,500,42.1,11.88,50.8,12.50,High,job,164 Barry Rd Campbellfield,2026-05-01 09:05:00
+SUN-400M-72HBD,Unknown,400,38.5,10.39,46.8,10.90,Low,job,164 Barry Rd Campbellfield,2026-05-01 09:10:00
+ZNM72H415,Unknown,415,39.2,10.58,47.5,11.10,Low,job,164 Barry Rd Campbellfield,2026-05-01 09:15:00
+HT72-156M-310W,Unknown,310,36.4,8.52,44.9,8.90,Low,job,164 Barry Rd Campbellfield,2026-05-01 09:20:00
+CSUN370-72M,Unknown,370,37.8,9.79,46.2,10.20,Low,recycler,Lotus Recycling Campbellfield,2026-05-01 09:25:00

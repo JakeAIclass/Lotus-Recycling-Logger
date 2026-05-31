@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar Panel OCR — Monitoring Dashboard</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0c0f14;color:#e2e6ef;margin:0;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{color:#f59e0b;border-bottom:2px solid #f59e0b;padding-bottom:10px}
+h2{color:#60a5fa;margin-top:24px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
+.card{background:#161a22;border:1px solid #2a3040;border-radius:8px;padding:20px;text-align:center}
+.card-val{font-size:2.2rem;font-weight:700}
+.card-label{font-size:.8rem;color:#8a92a6;margin-top:6px;text-transform:uppercase;letter-spacing:.5px}
+.green{color:#34d399}.amber{color:#f59e0b}.red{color:#f87171}.blue{color:#60a5fa}
+.alert-box{border-radius:8px;padding:14px;margin:10px 0;display:flex;align-items:center;gap:10px}
+.drift{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3)}
+.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3)}
+.info{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.3)}
+table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.85rem}
+th{background:#1e232d;padding:10px;text-align:left;color:#8a92a6;font-size:.75rem;text-transform:uppercase}
+td{padding:10px;border-bottom:1px solid #2a3040;font-family:monospace}
+.badge{padding:3px 8px;border-radius:4px;font-size:.75rem;font-weight:600}
+.b-ok{background:rgba(52,211,153,.2);color:#34d399}
+.b-warn{background:rgba(245,158,11,.2);color:#f59e0b}
+.b-err{background:rgba(248,113,113,.2);color:#f87171}
+footer{margin-top:30px;color:#555;font-size:.75rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🔍 Solar Panel Serial Intelligence — Monitoring Dashboard</h1>
+<p style="color:#8a92a6">COS40007 AI Engineering | Group CL02_G06 | Last updated: <span id="ts"></span></p>
+
+<h2>System Status</h2>
+<div class="grid">
+  <div class="card"><div class="card-val green">100%</div><div class="card-label">Train Accuracy</div></div>
+  <div class="card"><div class="card-val green">100%</div><div class="card-label">Test Accuracy</div></div>
+  <div class="card"><div class="card-val amber">66.7%</div><div class="card-label">New Data Unknown Rate</div></div>
+  <div class="card"><div class="card-val green">18</div><div class="card-label">Training Samples</div></div>
+  <div class="card"><div class="card-val green">30+</div><div class="card-label">Brands Covered</div></div>
+  <div class="card"><div class="card-val red">⚠️ DRIFT</div><div class="card-label">New Data Status</div></div>
+</div>
+
+<h2>Drift Detection Alerts</h2>
+<div class="alert-box ok">✅ <strong>Train data:</strong> No drift — Unknown rate 0.0% | Confidence 1.00</div>
+<div class="alert-box ok">✅ <strong>Test data:</strong> No drift — Unknown rate 0.0% | Confidence 1.00</div>
+<div class="alert-box drift">⚠️ <strong>New data DRIFT ALERT:</strong> Unknown rate 66.7% exceeds threshold 20.0%</div>
+<div class="alert-box drift">⚠️ <strong>LOW CONFIDENCE:</strong> Avg confidence 0.67 below threshold 0.70</div>
+<div class="alert-box info">🔄 <strong>Retraining recommended</strong> — push pattern updates and new training data</div>
+
+<h2>Brand Detection Log</h2>
+<table>
+<thead><tr><th>Serial Number</th><th>Detected Brand</th><th>Confidence</th><th>Dataset</th></tr></thead>
+<tbody>
+<tr><td>440NEG9R.25|Q1||00407916</td><td>Trina Solar</td><td><span class="badge b-ok">High</span></td><td>Train</td></tr>
+<tr><td>9030182876407801163</td><td>Hanwha Q.CELLS</td><td><span class="badge b-ok">High</span></td><td>Train</td></tr>
+<tr><td>P012600100633255</td><td>Trina Solar</td><td><span class="badge b-ok">High</span></td><td>Train</td></tr>
+<tr><td>GEB841-209111200132061X7</td><td>Kaneka</td><td><span class="badge b-ok">High</span></td><td>Train</td></tr>
+<tr><td>143P606014026786</td><td>Solar Juice</td><td><span class="badge b-ok">High</span></td><td>Train</td></tr>
+<tr><td>500150225061180000033333</td><td>JinkoSolar</td><td><span class="badge b-ok">High</span></td><td>New Data</td></tr>
+<tr><td>440NEG9R.25|Q3||00901234</td><td>Trina Solar</td><td><span class="badge b-ok">High</span></td><td>New Data</td></tr>
+<tr><td>SUN-400M-72HBD</td><td>Unknown</td><td><span class="badge b-err">Low</span></td><td>New Data ⚠️</td></tr>
+<tr><td>ZNM72H415</td><td>Unknown</td><td><span class="badge b-err">Low</span></td><td>New Data ⚠️</td></tr>
+<tr><td>HT72-156M-310W</td><td>Unknown</td><td><span class="badge b-err">Low</span></td><td>New Data ⚠️</td></tr>
+<tr><td>CSUN370-72M</td><td>Unknown</td><td><span class="badge b-err">Low</span></td><td>New Data ⚠️</td></tr>
+</tbody>
+</table>
+
+<h2>Pipeline History</h2>
+<table>
+<thead><tr><th>Run</th><th>Trigger</th><th>Train Acc</th><th>Test Acc</th><th>Drift</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>#1</td><td>Initial push</td><td>100%</td><td>100%</td><td>None</td><td><span class="badge b-ok">✅ Pass</span></td></tr>
+<tr><td>#2</td><td>New data push</td><td>100%</td><td>100%</td><td>66.7% unknown</td><td><span class="badge b-warn">⚠️ Drift</span></td></tr>
+</tbody>
+</table>
+
+<footer>COS40007 AI Engineering | Group CL02_G06 | Lotus Recycling Partnership | Swinburne University 2026</footer>
+</div>
+<script>document.getElementById("ts").textContent = new Date().toLocaleString();</script>
+</body>
+</html>

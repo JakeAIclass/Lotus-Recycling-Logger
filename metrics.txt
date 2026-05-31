@@ -1,0 +1,18 @@
+=== SOLAR PANEL OCR MODEL METRICS ===
+
+Generated: 2026-05-31 16:04:27
+
+TRAINING SET:
+  Samples:    18
+  Accuracy:   100.0%
+  Unknown:    0.0%
+
+TEST SET:
+  Samples:    12
+  Accuracy:   100.0%
+  Unknown:    0.0%
+
+NEW DATA:
+  Samples:    6
+  Accuracy:   100.0%
+  Unknown:    66.7%

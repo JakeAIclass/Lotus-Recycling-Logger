@@ -1,0 +1,24 @@
+{
+  "label": "test",
+  "timestamp": "2026-05-31T16:04:01.502426",
+  "total_samples": 12,
+  "unknown_count": 0,
+  "unknown_rate": 0.0,
+  "avg_confidence": 1.0,
+  "delisted_detected": 0,
+  "brand_distribution": {
+    "Trina Solar": 2,
+    "Hanwha Qcells": 2,
+    "Canadian Solar": 1,
+    "JA Solar": 1,
+    "LONGi Solar": 1,
+    "Risen Energy": 1,
+    "JinkoSolar": 1,
+    "REC Group": 1,
+    "Tindo Solar": 1,
+    "Suntech Power": 1
+  },
+  "drift_detected": false,
+  "low_confidence": false,
+  "alerts": []
+}

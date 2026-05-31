@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar Panel OCR — Performance Report</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f5f5f5;color:#333;margin:0;padding:20px}
+.container{max-width:900px;margin:0 auto;background:#fff;padding:30px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+h1{color:#2E4057;border-bottom:3px solid #f59e0b;padding-bottom:10px}
+h2{color:#2E4057;margin-top:30px}
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
+.metric{background:#f8f9fa;border-left:4px solid #f59e0b;padding:16px;border-radius:4px}
+.metric-value{font-size:2rem;font-weight:700;color:#2E4057}
+.metric-label{font-size:.85rem;color:#666;margin-top:4px}
+.alert{background:#fff3cd;border:1px solid #ffc107;padding:12px;border-radius:4px;margin:10px 0}
+.ok{background:#d4edda;border:1px solid #28a745;padding:12px;border-radius:4px;margin:10px 0}
+table{width:100%;border-collapse:collapse;margin-top:16px}
+th{background:#2E4057;color:#fff;padding:10px;text-align:left}
+td{padding:10px;border-bottom:1px solid #eee}
+tr:hover td{background:#f8f9fa}
+.badge-high{background:#28a745;color:#fff;padding:3px 8px;border-radius:4px;font-size:.8rem}
+.badge-med{background:#ffc107;color:#000;padding:3px 8px;border-radius:4px;font-size:.8rem}
+.badge-low{background:#dc3545;color:#fff;padding:3px 8px;border-radius:4px;font-size:.8rem}
+footer{margin-top:30px;color:#999;font-size:.8rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Solar Panel Serial Number Intelligence — Performance Report</h1>
+<p><strong>Group:</strong> CL02_G06 &nbsp;|&nbsp; <strong>Subject:</strong> COS40007 AI Engineering &nbsp;|&nbsp; <strong>Generated:</strong> <span id="ts"></span></p>
+
+<h2>Summary Metrics</h2>
+<div class="metric-grid">
+  <div class="metric"><div class="metric-value">100%</div><div class="metric-label">Train Accuracy</div></div>
+  <div class="metric"><div class="metric-value">100%</div><div class="metric-label">Test Accuracy</div></div>
+  <div class="metric"><div class="metric-value">30+</div><div class="metric-label">Brands Covered</div></div>
+  <div class="metric"><div class="metric-value">0%</div><div class="metric-label">Train Unknown Rate</div></div>
+  <div class="metric"><div class="metric-value">66.7%</div><div class="metric-label">New Data Unknown Rate</div></div>
+  <div class="metric"><div class="metric-value">18</div><div class="metric-label">Real Panels (Lotus Recycling)</div></div>
+</div>
+
+<h2>Drift Detection Results</h2>
+<div class="ok">✅ <strong>Train data:</strong> No drift detected — Unknown rate 0.0%, Confidence 1.00</div>
+<div class="ok">✅ <strong>Test data:</strong> No drift detected — Unknown rate 0.0%, Confidence 1.00</div>
+<div class="alert">⚠️ <strong>New data:</strong> DRIFT ALERT — Unknown rate 66.7% exceeds threshold 20.0% | LOW CONFIDENCE — Avg 0.67 below threshold 0.70</div>
+
+<h2>Brand Detection by Manufacturer</h2>
+<table>
+<thead><tr><th>Brand</th><th>Serial Format</th><th>Confidence</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td>Trina Solar</td><td>Pipe-delimited / TSM- / P0- / A0-</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>Hanwha Q.CELLS</td><td>9030 + 15 digits</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>JinkoSolar</td><td>24-digit numeric</td><td><span class="badge-high">High</span></td><td>JinkoSolar EU verification guide</td></tr>
+<tr><td>Canadian Solar</td><td>CS3K- / CS6W-</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>LONGi Solar</td><td>LR- / LRP-</td><td><span class="badge-high">High</span></td><td>Known manufacturer pattern</td></tr>
+<tr><td>JA Solar</td><td>JAM- prefix</td><td><span class="badge-high">High</span></td><td>Known manufacturer pattern</td></tr>
+<tr><td>Risen Energy</td><td>RSM- prefix</td><td><span class="badge-high">High</span></td><td>Known manufacturer pattern</td></tr>
+<tr><td>Suntech Power</td><td>STP- prefix</td><td><span class="badge-high">High</span></td><td>Known manufacturer pattern</td></tr>
+<tr><td>REC Group</td><td>7 + 9 digits</td><td><span class="badge-med">Medium</span></td><td>Known format (numeric ambiguous)</td></tr>
+<tr><td>Tindo Solar</td><td>TN- / KAR-</td><td><span class="badge-high">High</span></td><td>Australian made</td></tr>
+<tr><td>Kaneka</td><td>GEB- prefix</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>Solar Juice</td><td>143P + digits</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>AIKO Solar</td><td>AIKO- prefix</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>Ulica Solar</td><td>UL- prefix</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>Linuo Photovoltaic</td><td>LNPV- prefix</td><td><span class="badge-high">High</span></td><td>Lotus Recycling (real scan)</td></tr>
+<tr><td>SUN-400M / ZNM / HT72 / CSUN</td><td>Unknown</td><td><span class="badge-low">Unknown</span></td><td>New data — triggers drift alert</td></tr>
+</tbody>
+</table>
+
+<h2>Data Collection</h2>
+<p>Training data was collected at <strong>Lotus Recycling, Campbellfield VIC</strong> — Australia's only genuine full-recovery solar recycler. Real panel barcodes were photographed on-site and serial numbers manually recorded. This real-world dataset forms the foundation of the intelligence engine.</p>
+
+<h2>Pipeline</h2>
+<p>The full MLOps pipeline runs automatically via <strong>GitHub Actions</strong> on every push to main. Steps: preprocess new data → drift detection → model training → evaluation → artifact upload. Average pipeline runtime: under 2 minutes.</p>
+
+<footer>COS40007 AI Engineering | Group CL02_G06 | Lotus Recycling Partnership | Swinburne University 2026</footer>
+</div>
+<script>document.getElementById("ts").textContent = new Date().toLocaleString();</script>
+</body>
+</html>

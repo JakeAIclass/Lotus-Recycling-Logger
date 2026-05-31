@@ -1,0 +1,19 @@
+serial_no,brand,wattage,voltage_vmp,current_imp,voltage_voc,current_isc,confidence,scan_type,job_site,timestamp
+440NEG9R.25|Q1||00407916,Trina Solar,440,44.0,10.01,52.2,10.67,High,job,164 Barry Rd Campbellfield,2026-03-01 09:00:00
+TSM-275PD05|A09180605701597,Trina Solar,275,31.1,8.84,38.1,9.32,High,recycler,Lotus Recycling Campbellfield,2026-03-01 10:00:00
+P012600100633255,Trina Solar,475,37.0,15.01,44.5,15.97,Medium,job,164 Barry Rd Campbellfield,2026-03-01 09:05:00
+9030182876407801163,Hanwha Qcells,325,33.65,9.66,40.40,10.14,Medium,job,12 Solar St Sunshine,2026-03-02 09:00:00
+Q.PEAK-DUO-G10-405BK,Hanwha Qcells,405,37.8,10.72,45.6,11.20,High,job,22 Power Pl Doncaster,2026-03-02 09:10:00
+CS3K-300P,Canadian Solar,300,32.7,9.18,39.3,9.65,High,job,88 Rooftop Rd Preston,2026-03-03 09:00:00
+CS6W-540MS-2023,Canadian Solar,540,41.3,13.07,49.5,13.80,High,recycler,Lotus Recycling Campbellfield,2026-03-03 10:00:00
+JAM72S30-530-MR,JA Solar,530,42.0,12.62,50.5,13.20,High,job,45 Green Ave Reservoir,2026-03-04 09:00:00
+LR5-72HPH-530M-F4,LONGi Solar,530,41.6,12.74,49.8,13.30,High,job,77 Watt St Werribee,2026-03-04 09:10:00
+RSM120-8-595M,Risen Energy,595,43.1,13.81,52.0,14.50,High,job,33 Energy Rd Epping,2026-03-05 09:00:00
+STP415S-C54-MA,Suntech Power,415,37.9,10.95,45.8,11.40,High,recycler,Lotus Recycling Campbellfield,2026-03-05 10:00:00
+GEB841-209111200132061X7,Kaneka,60,67.0,0.90,91.8,1.19,High,recycler,Lotus Recycling Campbellfield,2026-03-06 09:00:00
+143P606014026786,Solar Juice,250,29.94,8.35,37.66,8.92,Low,recycler,Lotus Recycling Campbellfield,2026-03-06 09:15:00
+500150223151120000012345,JinkoSolar,500,42.1,11.88,50.8,12.50,High,job,55 Solar Ave Oakleigh,2026-03-07 09:00:00
+470150223121130000098765,JinkoSolar,470,41.8,11.24,50.2,11.90,High,recycler,Lotus Recycling Campbellfield,2026-03-07 10:00:00
+TN120M-395W-2023,Tindo Solar,395,38.1,10.37,46.2,10.80,High,job,5 Nordic Way Melbourne,2026-03-08 09:00:00
+7234567891,REC Group,380,34.2,11.11,40.8,11.60,Low,job,99 River Rd Docklands,2026-03-08 09:10:00
+HiE-S480VG,Hyundai Energy,480,41.2,11.65,49.5,12.10,High,job,33 Seoul St Box Hill,2026-03-09 09:00:00
